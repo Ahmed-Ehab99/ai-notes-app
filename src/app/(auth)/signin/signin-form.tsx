@@ -11,13 +11,21 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import { useAuthActions } from "@convex-dev/auth/react";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
+import { toast } from "sonner";
 import { AuthFormValues, signinSchema } from "../schema";
 
 export function SigninForm() {
   const [step, setStep] = useState<"signIn" | "signUp">("signIn");
+
+  const { signIn } = useAuthActions();
+  const [isLoading, setIsLoading] = useState(false);
+
+  const router = useRouter();
 
   const form = useForm<AuthFormValues>({
     resolver: zodResolver(signinSchema),
@@ -28,14 +36,42 @@ export function SigninForm() {
   });
 
   async function onSubmit(values: AuthFormValues) {
-    // TODO: Sign in
+    setIsLoading(true);
+    try {
+      await signIn("password", {
+        ...values,
+        flow: step,
+      });
+      toast.success(
+        step === "signIn"
+          ? "Signed in successfully"
+          : "Account created successfully",
+      );
+      router.push("/notes");
+    } catch (error) {
+      console.error(error);
+      if (
+        error instanceof Error &&
+        (error.message.includes("InvalidAccountId") ||
+          error.message.includes("InvalidSecret"))
+      ) {
+        form.setError("root", {
+          type: "manual",
+          message: "Invalid credentials",
+        });
+      } else {
+        toast.error("Something went wrong, Please try again.");
+      }
+    } finally {
+      setIsLoading(false);
+    }
   }
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-muted/50">
-      <div className="w-full max-w-md p-8 space-y-8 bg-card rounded-lg shadow-lg">
-        <div className="text-center space-y-2">
-          <h1 className="text-3xl font-bold text-card-foreground">
+    <div className="bg-muted/50 flex min-h-screen flex-col items-center justify-center">
+      <div className="bg-card w-full max-w-md space-y-8 rounded-lg p-8 shadow-lg">
+        <div className="space-y-2 text-center">
+          <h1 className="text-card-foreground text-3xl font-bold">
             {step === "signIn" ? "Login" : "Create Account"}
           </h1>
           <p className="text-muted-foreground">
@@ -54,7 +90,7 @@ export function SigninForm() {
                   <FormLabel>Email</FormLabel>
                   <FormControl>
                     <Input
-                      placeholder="you@example.com"
+                      placeholder="email@example.com"
                       {...field}
                       type="email"
                     />
@@ -77,11 +113,11 @@ export function SigninForm() {
               )}
             />
             {form.formState.errors.root && (
-              <div className="text-sm text-destructive">
+              <div className="text-destructive text-sm">
                 {form.formState.errors.root.message}
               </div>
             )}
-            <Button type="submit" className="w-full">
+            <Button type="submit" className="w-full" disabled={isLoading}>
               {step === "signIn" ? "Sign In" : "Sign Up"}
             </Button>
           </form>
@@ -89,7 +125,7 @@ export function SigninForm() {
         <Button
           variant="link"
           type="button"
-          className="w-full text-sm text-muted-foreground cursor-pointer"
+          className="text-muted-foreground w-full cursor-pointer text-sm"
           onClick={() => {
             setStep(step === "signIn" ? "signUp" : "signIn");
             form.reset(); // Reset form errors and values when switching modes
