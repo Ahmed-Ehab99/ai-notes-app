@@ -20,11 +20,11 @@ import { toast } from "sonner";
 import { AuthFormValues, signinSchema } from "../schema";
 
 export function SigninForm() {
+  // Hooks
   const [step, setStep] = useState<"signIn" | "signUp">("signIn");
-
-  const { signIn } = useAuthActions();
   const [isLoading, setIsLoading] = useState(false);
 
+  const { signIn } = useAuthActions();
   const router = useRouter();
 
   const form = useForm<AuthFormValues>({
@@ -35,6 +35,7 @@ export function SigninForm() {
     },
   });
 
+  // Functions
   async function onSubmit(values: AuthFormValues) {
     setIsLoading(true);
     try {
@@ -80,6 +81,7 @@ export function SigninForm() {
               : "Enter your details to create a new account."}
           </p>
         </div>
+
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
             <FormField
@@ -122,6 +124,7 @@ export function SigninForm() {
             </Button>
           </form>
         </Form>
+
         <Button
           variant="link"
           type="button"

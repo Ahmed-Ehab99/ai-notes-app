@@ -24,12 +24,14 @@ export function NoteItem({ note }: NoteItemProps) {
         <CardHeader>
           <CardTitle>{note.title}</CardTitle>
         </CardHeader>
+
         <CardContent>
           <div className="text-muted-foreground line-clamp-3 text-sm whitespace-pre-line">
             {note.body}
           </div>
         </CardContent>
       </Card>
+
       <NotePreviewDialog note={note} />
     </>
   );

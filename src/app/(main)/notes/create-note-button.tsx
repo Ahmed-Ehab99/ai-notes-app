@@ -37,6 +37,7 @@ export function CreateNoteButton() {
         <Plus />
         Create Note
       </Button>
+
       <CreateNoteDialog open={dialogOpen} onOpenChange={setDialogOpen} />
     </>
   );
@@ -48,6 +49,7 @@ interface CreateNoteDialogProps {
 }
 
 function CreateNoteDialog({ open, onOpenChange }: CreateNoteDialogProps) {
+  // Hooks
   const createNote = useMutation(api.notes.createNote);
 
   const form = useForm<NoteFormValues>({
@@ -58,8 +60,10 @@ function CreateNoteDialog({ open, onOpenChange }: CreateNoteDialogProps) {
     },
   });
 
+  // Derived States
   const isSubmitting = form.formState.isSubmitting;
 
+  // Functions
   async function onSubmit(values: NoteFormValues) {
     try {
       await createNote({
@@ -85,6 +89,7 @@ function CreateNoteDialog({ open, onOpenChange }: CreateNoteDialogProps) {
             done.
           </DialogDescription>
         </DialogHeader>
+
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
             <FormField
@@ -100,6 +105,7 @@ function CreateNoteDialog({ open, onOpenChange }: CreateNoteDialogProps) {
                 </FormItem>
               )}
             />
+
             <FormField
               control={form.control}
               name="body"
@@ -113,6 +119,7 @@ function CreateNoteDialog({ open, onOpenChange }: CreateNoteDialogProps) {
                 </FormItem>
               )}
             />
+
             <DialogFooter>
               <Button type="submit" disabled={isSubmitting}>
                 {isSubmitting ? "Saving..." : "Save"}
