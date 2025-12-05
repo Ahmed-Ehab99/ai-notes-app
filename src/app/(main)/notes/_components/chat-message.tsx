@@ -34,7 +34,7 @@ const ChatMessage = ({ message }: ChatMessageProps) => {
         {currentStep?.type === "text" && (
           <Markdown>{currentStep.text}</Markdown>
         )}
-        {currentStep.type === "tool-findRelevantNotes" && (
+        {currentStep?.type === "tool-findRelevantNotes" && (
           <div className="animate-pulse italic">Searching notes...</div>
         )}
       </div>
