@@ -1,6 +1,11 @@
 import { getAuthUserId } from "@convex-dev/auth/server";
 import { v } from "convex/values";
-import { internalMutation, mutation, query } from "./_generated/server";
+import {
+  internalMutation,
+  internalQuery,
+  mutation,
+  query,
+} from "./_generated/server";
 
 export const createNoteWithEmbeddings = internalMutation({
   args: {
@@ -53,6 +58,60 @@ export const getUserNotes = query({
   },
 });
 
+export const updateNoteWithEmbeddings = internalMutation({
+  args: {
+    noteId: v.id("notes"),
+    title: v.string(),
+    body: v.string(),
+    userId: v.id("users"),
+    embeddings: v.array(
+      v.object({
+        embedding: v.array(v.float64()),
+        content: v.string(),
+      }),
+    ),
+  },
+  handler: async (ctx, args) => {
+    // Get specific note
+    const note = await ctx.db.get(args.noteId);
+
+    if (!note) {
+      throw new Error("Note not found");
+    }
+
+    // Check that note belongs to that user (Security)
+    if (note.userId !== args.userId) {
+      throw new Error("User is not authorized to update this note");
+    }
+
+    // Delete old embeddings
+    const oldEmbeddings = await ctx.db
+      .query("noteEmbeddings")
+      .withIndex("by_noteId", (q) => q.eq("noteId", args.noteId))
+      .collect();
+
+    for (const embedding of oldEmbeddings) {
+      await ctx.db.delete(embedding._id);
+    }
+
+    // Update the note
+    await ctx.db.patch(args.noteId, {
+      title: args.title,
+      body: args.body,
+    });
+
+    // Insert new embeddings
+    for (const embeddingData of args.embeddings) {
+      await ctx.db.insert("noteEmbeddings", {
+        content: embeddingData.content,
+        embedding: embeddingData.embedding,
+        noteId: args.noteId,
+        userId: args.userId,
+      });
+    }
+  },
+});
+
 export const deleteNote = mutation({
   args: {
     noteId: v.id("notes"),
@@ -87,5 +146,34 @@ export const deleteNote = mutation({
 
     // Delete the note
     await ctx.db.delete(args.noteId);
+  },
+});
+
+export const fetchNotesByEmbeddingIds = internalQuery({
+  args: {
+    embeddingIds: v.array(v.id("noteEmbeddings")),
+  },
+  handler: async (ctx, args) => {
+    const embeddings = [];
+    for (const id of args.embeddingIds) {
+      const embedding = await ctx.db.get(id);
+      if (embedding !== null) {
+        embeddings.push(embedding);
+      }
+    }
+
+    const uniqueNoteIds = [
+      ...new Set(embeddings.map((embedding) => embedding.noteId)),
+    ];
+
+    const results = [];
+    for (const id of uniqueNoteIds) {
+      const note = await ctx.db.get(id);
+      if (note !== null) {
+        results.push(note);
+      }
+    }
+
+    return results;
   },
 });

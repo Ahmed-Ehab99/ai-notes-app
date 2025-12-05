@@ -11,7 +11,7 @@
 import type * as auth from "../auth.js";
 import type * as http from "../http.js";
 import type * as notes from "../notes.js";
-import type * as notesAction from "../notesAction.js";
+import type * as notesActions from "../notesActions.js";
 
 import type {
   ApiFromModules,
@@ -23,7 +23,7 @@ declare const fullApi: ApiFromModules<{
   auth: typeof auth;
   http: typeof http;
   notes: typeof notes;
-  notesAction: typeof notesAction;
+  notesActions: typeof notesActions;
 }>;
 
 /**

@@ -1,6 +1,3 @@
-"use client";
-
-import Markdown from "@/components/markdown";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
@@ -8,26 +5,9 @@ import { useChat } from "@ai-sdk/react";
 import { useAuthToken } from "@convex-dev/auth/react";
 import { DefaultChatTransport, UIMessage } from "ai";
 import { Bot, Expand, Minimize, Send, Trash, X } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
-
-const convexSiteUrl = process.env.NEXT_PUBLIC_CONVEX_URL?.replace(
-  /.cloud$/,
-  ".site",
-);
-
-export function AIChatButton() {
-  const [chatOpen, setChatOpen] = useState(false);
-
-  return (
-    <>
-      <Button onClick={() => setChatOpen(true)} variant="outline">
-        <Bot />
-        <span>Ask AI</span>
-      </Button>
-      <AIChatBox open={chatOpen} onClose={() => setChatOpen(false)} />
-    </>
-  );
-}
+import React, { useEffect, useRef, useState } from "react";
+import { convexSiteUrl } from "./ai-chat-button";
+import ChatMessage from "./chat-message";
 
 interface AIChatBoxProps {
   open: boolean;
@@ -47,12 +27,12 @@ const initialMessages: UIMessage[] = [
   },
 ];
 
-function AIChatBox({ open, onClose }: AIChatBoxProps) {
+const AiChatBox = ({ open, onClose }: AIChatBoxProps) => {
+  //Hooks
   const [isExpanded, setIsExpanded] = useState(false);
   const [input, setInput] = useState("");
-
+  const messagesEndRef = useRef<HTMLDivElement>(null);
   const token = useAuthToken();
-
   const { messages, sendMessage, setMessages, status } = useChat({
     transport: new DefaultChatTransport({
       api: `${convexSiteUrl}/api/chat`,
@@ -62,16 +42,17 @@ function AIChatBox({ open, onClose }: AIChatBoxProps) {
     }),
     messages: initialMessages,
   });
-
-  const messagesEndRef = useRef<HTMLDivElement>(null);
-  const isProcessing = status === "submitted" || status === "streaming";
-
   useEffect(() => {
     if (open) {
       messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
     }
   }, [open, messages]);
 
+  // Derived States
+  const isProcessing = status === "submitted" || status === "streaming";
+  const lastMessageIsUser = messages[messages.length - 1].role === "user";
+
+  // Functions
   function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (input.trim() && !isProcessing) {
@@ -87,8 +68,6 @@ function AIChatBox({ open, onClose }: AIChatBoxProps) {
   };
 
   if (!open) return null;
-
-  const lastMessageIsUser = messages[messages.length - 1].role === "user";
 
   return (
     <div
@@ -164,43 +143,7 @@ function AIChatBox({ open, onClose }: AIChatBoxProps) {
       </form>
     </div>
   );
-}
-
-interface ChatMessageProps {
-  message: UIMessage;
-}
-
-function ChatMessage({ message }: ChatMessageProps) {
-  const currentStep = message.parts[message.parts.length - 1];
-
-  return (
-    <div
-      className={cn(
-        "prose dark:prose-invert mb-2 flex max-w-[80%] flex-col",
-        message.role === "user" ? "ml-auto items-end" : "mr-auto items-start",
-      )}
-    >
-      <div
-        className={cn(
-          "prose dark:prose-invert rounded-lg px-3 py-2 text-sm",
-          message.role === "user"
-            ? "bg-primary text-primary-foreground"
-            : "bg-muted first:prose-p:mt-0",
-        )}
-      >
-        {message.role === "assistant" && (
-          <div className="text-muted-foreground mb-1 flex items-center gap-1 text-xs font-medium">
-            <Bot className="text-primary size-3" />
-            AI Assistant
-          </div>
-        )}
-        {currentStep?.type === "text" && (
-          <Markdown>{currentStep.text}</Markdown>
-        )}
-      </div>
-    </div>
-  );
-}
+};
 
 function Loader() {
   return (
@@ -219,3 +162,5 @@ function ErrorMessage() {
     </div>
   );
 }
+
+export default AiChatBox;

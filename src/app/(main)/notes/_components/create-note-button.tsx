@@ -25,7 +25,7 @@ import { Plus } from "lucide-react";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
-import { api } from "../../../../convex/_generated/api";
+import { api } from "../../../../../convex/_generated/api";
 import { noteFormSchema, NoteFormValues } from "./schema";
 
 export function CreateNoteButton() {
@@ -50,7 +50,7 @@ interface CreateNoteDialogProps {
 
 function CreateNoteDialog({ open, onOpenChange }: CreateNoteDialogProps) {
   // Hooks
-  const createNote = useAction(api.notesAction.createNote);
+  const createNote = useAction(api.notesActions.createNote);
 
   const form = useForm<NoteFormValues>({
     resolver: zodResolver(noteFormSchema),

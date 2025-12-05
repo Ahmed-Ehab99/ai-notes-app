@@ -1,5 +1,5 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Doc } from "../../../../convex/_generated/dataModel";
+import { Doc } from "../../../../../convex/_generated/dataModel";
 import { NotePreviewDialog } from "./note-preview-dialog";
 
 interface NoteItemProps {

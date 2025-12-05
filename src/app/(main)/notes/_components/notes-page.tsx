@@ -2,7 +2,7 @@
 
 import { Skeleton } from "@/components/ui/skeleton";
 import { useQuery } from "convex/react";
-import { api } from "../../../../convex/_generated/api";
+import { api } from "../../../../../convex/_generated/api";
 import { AIChatButton } from "./ai-chat-button";
 import { CreateNoteButton } from "./create-note-button";
 import { NoteItem } from "./note-item";
